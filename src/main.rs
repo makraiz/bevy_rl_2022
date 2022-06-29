@@ -50,16 +50,16 @@ fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Tra
 
 fn movement(keys: Res<Input<KeyCode>>, mut positions: Query<&mut Position, With<Player>>) {
     for mut pos in positions.iter_mut() {
-        if keys.pressed(KeyCode::Left) {
+        if keys.just_pressed(KeyCode::Left) {
             pos.x -= 1;
         }
-        if keys.pressed(KeyCode::Right) {
+        if keys.just_pressed(KeyCode::Right) {
             pos.x += 1;
         }
-        if keys.pressed(KeyCode::Down) {
+        if keys.just_pressed(KeyCode::Down) {
             pos.y -= 1;
         }
-        if keys.pressed(KeyCode::Up) {
+        if keys.just_pressed(KeyCode::Up) {
             pos.y += 1;
         }
     }
