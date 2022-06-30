@@ -16,7 +16,7 @@ fn main() {
             height: 500.0,
             ..default()
         })
-        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
+        .insert_resource(ClearColor(CLEAR))
         .add_startup_system(setup)
         .add_plugins(DefaultPlugins)
         .add_system(input)
