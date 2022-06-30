@@ -8,6 +8,8 @@ use components::*;
 use consts::*;
 use systems::*;
 
+//Still to implement from Chapter 2: bounds checking on movement, map
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
