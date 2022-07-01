@@ -8,7 +8,7 @@ use components::*;
 use consts::*;
 use systems::*;
 
-//Still to implement from Chapter 2: bounds checking on movement, map
+//Still to implement from Chapter 2: bounds checking on movement, map, tiles
 
 fn main() {
     App::new()
