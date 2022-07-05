@@ -11,7 +11,7 @@ pub struct FgTile;
 
 #[derive(Component)]
 pub struct Glyph {
-    pub index: usize
+    pub index: usize,
 }
 
 #[derive(Component)]
@@ -21,7 +21,7 @@ pub struct Player;
 pub struct Position {
     pub x: usize,
     pub y: usize,
-    pub z: usize
+    pub z: usize,
 }
 
 #[derive(Component)]

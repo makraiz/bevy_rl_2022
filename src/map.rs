@@ -1,18 +1,15 @@
-use bevy::prelude::*;
 use crate::{components::*, creatures::CreatureBundle, player::PlayerBundle, term::*};
+use bevy::prelude::*;
 
 pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .insert_resource(CurrentMap::new())
-        .add_startup_system(build_map)
-        .add_system_set_to_stage(
-            CoreStage::PostUpdate,
-            SystemSet::new()
-            .with_system(render_map)
-        );
-
+        app.insert_resource(CurrentMap::new())
+            .add_startup_system(build_map)
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::new().with_system(render_map),
+            );
     }
 }
 
@@ -21,18 +18,18 @@ const NUM_TILES: usize = TERM_WIDTH * TERM_HEIGHT;
 #[derive(Clone, Copy, PartialEq)]
 pub enum TileType {
     Wall,
-    Floor
+    Floor,
 }
 
 pub struct CurrentMap {
     pub tiles: Vec<TileType>,
-    pub creatures: Vec<Entity>
+    pub creatures: Vec<Entity>,
 }
 impl CurrentMap {
     pub fn new() -> Self {
         Self {
             tiles: vec![TileType::Floor; NUM_TILES],
-            creatures: Vec::new()
+            creatures: Vec::new(),
         }
     }
 }
@@ -44,26 +41,43 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
         map.tiles[i] = TileType::Wall;
     }
 
-    map.creatures.push(commands.spawn_bundle(PlayerBundle {
-        player: Player {},
-        creature: Creature {},
-        glyph: Glyph {index: 64},
-        pos: Position {
-            x: TERM_WIDTH / 2,
-            y: TERM_HEIGHT / 2,
-            z: 1
-        }
-    }).id());
+    map.creatures.push(
+        commands
+            .spawn_bundle(PlayerBundle {
+                player: Player {},
+                creature: Creature {},
+                glyph: Glyph { index: 64 },
+                pos: Position {
+                    x: TERM_WIDTH / 2,
+                    y: TERM_HEIGHT / 2,
+                    z: 1,
+                },
+            })
+            .id(),
+    );
 
-    map.creatures.push(commands.spawn_bundle(CreatureBundle {
-        creature: Creature {},
-        glyph: Glyph {index: 187},
-        pos: Position {x: TERM_WIDTH / 2 + 4, y: TERM_HEIGHT / 2, z: 1}
-    }).id());
+    map.creatures.push(
+        commands
+            .spawn_bundle(CreatureBundle {
+                creature: Creature {},
+                glyph: Glyph { index: 187 },
+                pos: Position {
+                    x: TERM_WIDTH / 2 + 4,
+                    y: TERM_HEIGHT / 2,
+                    z: 1,
+                },
+            })
+            .id(),
+    );
 }
 
 //Render to terminal
-fn render_map(term: Res<Terminal>, map: Res<CurrentMap>, mut t_query: Query<&mut TextureAtlasSprite>, e_query: Query<(&Position, &Glyph)>) {
+fn render_map(
+    term: Res<Terminal>,
+    map: Res<CurrentMap>,
+    mut t_query: Query<&mut TextureAtlasSprite>,
+    e_query: Query<(&Position, &Glyph)>,
+) {
     if map.is_changed() {
         //Draw map tiles.
         for y in 0..TERM_HEIGHT {
@@ -75,7 +89,7 @@ fn render_map(term: Res<Terminal>, map: Res<CurrentMap>, mut t_query: Query<&mut
                         if let Ok(mut sprite) = t_query.get_mut(id) {
                             sprite.index = 0;
                         }
-                    },
+                    }
                     TileType::Wall => {
                         let id = term.fg_tiles[index];
                         if let Ok(mut sprite) = t_query.get_mut(id) {
