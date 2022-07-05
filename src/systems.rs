@@ -9,10 +9,11 @@ pub fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut
     }
     let window = windows.get_primary().unwrap();
     for (pos, mut transform) in q.iter_mut() {
+        let z = transform.translation.to_array()[2];
         transform.translation = Vec3::new(
-            convert(pos.x as f32, window.width() as f32, TERM_WIDTH as f32),
-            convert(pos.y as f32, window.height() as f32, TERM_HEIGHT as f32),
-            0.
+            convert(pos.x as f32, window.width() as f32, MAP_WIDTH as f32),
+            convert(pos.y as f32, window.height() as f32, MAP_HEIGHT as f32),
+            z
         );
     }
 }

@@ -6,6 +6,9 @@ pub struct Player;
 #[derive(Component)]
 pub struct Npc;
 
+#[derive(Component)]
+pub struct MapTile;
+
 #[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     pub x: i32,
