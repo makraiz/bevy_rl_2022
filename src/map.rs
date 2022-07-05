@@ -24,24 +24,30 @@ pub enum TileType {
 #[derive(Clone, Copy)]
 pub struct Tile {
     pub tile_type: TileType,
-    pub is_blocked: bool
+    pub is_blocked: bool,
 }
 
 pub struct CurrentMap {
-    pub tiles: Vec<Tile>, 
-    pub creatures: Vec<Entity>, 
+    pub tiles: Vec<Tile>,
+    pub creatures: Vec<Entity>,
     pub blocked: Vec<Position>,
     pub width: usize,
-    pub height: usize
+    pub height: usize,
 }
 impl CurrentMap {
     pub fn new() -> Self {
         Self {
-            tiles: vec![Tile {tile_type: TileType::Floor, is_blocked: false}; NUM_TILES],
+            tiles: vec![
+                Tile {
+                    tile_type: TileType::Floor,
+                    is_blocked: false
+                };
+                NUM_TILES
+            ],
             creatures: Vec::new(),
             blocked: Vec::new(),
             width: TERM_WIDTH,
-            height: TERM_HEIGHT
+            height: TERM_HEIGHT,
         }
     }
 }
@@ -50,7 +56,10 @@ impl CurrentMap {
 fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
     //Build some walls
     for i in 30..33 {
-        map.tiles[i] = Tile { tile_type: TileType::Wall, is_blocked: true };
+        map.tiles[i] = Tile {
+            tile_type: TileType::Wall,
+            is_blocked: true,
+        };
     }
 
     map.creatures.push(
@@ -81,7 +90,7 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
                     z: 1,
                 },
             })
-        .id(),
+            .id(),
     );
     let ind = pos_index(TERM_WIDTH / 2 + 4, TERM_HEIGHT / 2);
     map.tiles[ind].is_blocked = true;

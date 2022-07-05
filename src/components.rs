@@ -41,5 +41,5 @@ impl TileSize {
 #[derive(Component)]
 pub struct WantsToMove {
     pub dx: i32,
-    pub dy: i32
+    pub dy: i32,
 }

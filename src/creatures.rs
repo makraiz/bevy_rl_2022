@@ -1,4 +1,8 @@
-use crate::{components::*, map::{CurrentMap, TileType}, term::pos_index};
+use crate::{
+    components::*,
+    map::{CurrentMap, TileType},
+    term::pos_index,
+};
 use bevy::prelude::*;
 
 #[derive(Bundle)]
@@ -15,7 +19,11 @@ impl Plugin for CreaturesPlugin {
     }
 }
 
-fn wants_to_move(mut commands: Commands, mut movers: Query<(&mut Position, &WantsToMove, Entity)>, mut map: ResMut<CurrentMap>) {
+fn wants_to_move(
+    mut commands: Commands,
+    mut movers: Query<(&mut Position, &WantsToMove, Entity)>,
+    mut map: ResMut<CurrentMap>,
+) {
     for (mut mover, dest, ent) in movers.iter_mut() {
         let dest_x = mover.x as i32 + dest.dx;
         let dest_y = mover.y as i32 + dest.dy;
