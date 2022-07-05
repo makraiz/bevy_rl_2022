@@ -17,7 +17,7 @@ pub struct Glyph {
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component)]
+#[derive(Component, PartialEq, PartialOrd, Eq, Ord)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -36,4 +36,10 @@ impl TileSize {
             height: x,
         }
     }
+}
+
+#[derive(Component)]
+pub struct WantsToMove {
+    pub dx: i32,
+    pub dy: i32
 }

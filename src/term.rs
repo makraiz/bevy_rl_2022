@@ -137,7 +137,6 @@ pub fn pos_index(x: usize, y: usize) -> usize {
     (y * TERM_WIDTH) + x
 }
 
-//Not sure if this function will ever be used, but it's good to have if needed.
-pub fn _index_pos(index: usize) -> (usize, usize) {
+pub fn index_pos(index: usize) -> (usize, usize) {
     (index % TERM_WIDTH, index / TERM_WIDTH)
 }

@@ -21,15 +21,27 @@ pub enum TileType {
     Floor,
 }
 
+#[derive(Clone, Copy)]
+pub struct Tile {
+    pub tile_type: TileType,
+    pub is_blocked: bool
+}
+
 pub struct CurrentMap {
-    pub tiles: Vec<TileType>,
-    pub creatures: Vec<Entity>,
+    pub tiles: Vec<Tile>, 
+    pub creatures: Vec<Entity>, 
+    pub blocked: Vec<Position>,
+    pub width: usize,
+    pub height: usize
 }
 impl CurrentMap {
     pub fn new() -> Self {
         Self {
-            tiles: vec![TileType::Floor; NUM_TILES],
+            tiles: vec![Tile {tile_type: TileType::Floor, is_blocked: false}; NUM_TILES],
             creatures: Vec::new(),
+            blocked: Vec::new(),
+            width: TERM_WIDTH,
+            height: TERM_HEIGHT
         }
     }
 }
@@ -38,7 +50,7 @@ impl CurrentMap {
 fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
     //Build some walls
     for i in 30..33 {
-        map.tiles[i] = TileType::Wall;
+        map.tiles[i] = Tile { tile_type: TileType::Wall, is_blocked: true };
     }
 
     map.creatures.push(
@@ -55,6 +67,8 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
             })
             .id(),
     );
+    let ind = pos_index(TERM_WIDTH / 2, TERM_HEIGHT / 2);
+    map.tiles[ind].is_blocked = true;
 
     map.creatures.push(
         commands
@@ -67,8 +81,10 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
                     z: 1,
                 },
             })
-            .id(),
+        .id(),
     );
+    let ind = pos_index(TERM_WIDTH / 2 + 4, TERM_HEIGHT / 2);
+    map.tiles[ind].is_blocked = true;
 }
 
 //Render to terminal
@@ -83,7 +99,7 @@ fn render_map(
         for y in 0..TERM_HEIGHT {
             for x in 0..TERM_WIDTH {
                 let index = pos_index(x, y);
-                match map.tiles[index] {
+                match map.tiles[index].tile_type {
                     TileType::Floor => {
                         let id = term.fg_tiles[index];
                         if let Ok(mut sprite) = t_query.get_mut(id) {
