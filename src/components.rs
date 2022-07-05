@@ -1,22 +1,28 @@
-use bevy::prelude::Component;
+use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Player;
+pub struct BgTile;
 
 #[derive(Component)]
-pub struct Npc;
+pub struct FgTile;
 
 #[derive(Component)]
-pub struct MapTile;
-
-#[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
-    pub x: i32,
-    pub y: i32
+    pub x: usize,
+    pub y: usize,
+    pub z: usize
 }
 
 #[derive(Component)]
-pub struct WantsToMove {
-    pub dx: i32,
-    pub dy: i32
+pub struct TileSize {
+    pub width: f32,
+    pub height: f32,
+}
+impl TileSize {
+    pub fn square(x: f32) -> Self {
+        Self {
+            width: x,
+            height: x,
+        }
+    }
 }
