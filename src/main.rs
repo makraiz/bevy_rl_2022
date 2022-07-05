@@ -2,6 +2,7 @@ mod components;
 mod creatures;
 mod input;
 mod map;
+mod map_builder;
 mod player;
 mod term;
 

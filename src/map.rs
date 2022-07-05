@@ -1,10 +1,10 @@
-use crate::{components::*, creatures::CreatureBundle, player::PlayerBundle, term::*};
+use crate::{components::*, creatures::CreatureBundle, map_builder::dun_gen, player::PlayerBundle, term::*};
 use bevy::prelude::*;
 
 pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(CurrentMap::new())
+        app.insert_resource(dun_gen(TERM_WIDTH, TERM_HEIGHT))
             .add_startup_system(build_map)
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
@@ -35,33 +35,26 @@ pub struct CurrentMap {
     pub height: usize,
 }
 impl CurrentMap {
-    pub fn new() -> Self {
+    pub fn new(map_width: usize, map_height: usize) -> Self {
         Self {
             tiles: vec![
                 Tile {
-                    tile_type: TileType::Floor,
-                    is_blocked: false
+                    tile_type: TileType::Wall,
+                    is_blocked: true
                 };
                 NUM_TILES
             ],
             creatures: Vec::new(),
             blocked: Vec::new(),
-            width: TERM_WIDTH,
-            height: TERM_HEIGHT,
+            width: map_width,
+            height: map_height,
         }
     }
 }
 
 //Startup system
 fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
-    //Build some walls
-    for i in 30..33 {
-        map.tiles[i] = Tile {
-            tile_type: TileType::Wall,
-            is_blocked: true,
-        };
-    }
-
+    //populate the map.  
     map.creatures.push(
         commands
             .spawn_bundle(PlayerBundle {
