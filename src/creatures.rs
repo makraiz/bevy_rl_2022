@@ -1,8 +1,4 @@
-use crate::{
-    components::*,
-    map::{CurrentMap, TileType},
-    term::pos_index,
-};
+use crate::{components::*, map::CurrentMap, term::pos_index};
 use bevy::prelude::*;
 
 #[derive(Bundle)]
