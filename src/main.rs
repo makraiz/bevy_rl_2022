@@ -1,5 +1,7 @@
 mod components;
+mod creatures;
 mod map;
+mod player;
 mod term;
 
 use bevy::prelude::*;

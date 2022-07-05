@@ -4,7 +4,18 @@ use bevy::prelude::*;
 pub struct BgTile;
 
 #[derive(Component)]
+pub struct Creature;
+
+#[derive(Component)]
 pub struct FgTile;
+
+#[derive(Component)]
+pub struct Glyph {
+    pub index: usize
+}
+
+#[derive(Component)]
+pub struct Player;
 
 #[derive(Component)]
 pub struct Position {
