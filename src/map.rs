@@ -1,10 +1,15 @@
-use crate::{components::*, creatures::CreatureBundle, map_builder::dun_gen, player::PlayerBundle, term::*};
+use crate::{components::*, creatures::CreatureBundle, map_builder::*, player::PlayerBundle, term::*};
 use bevy::prelude::*;
+
+const NUM_TILES: usize = TERM_WIDTH * TERM_HEIGHT;
+const ROOM_MAX_SIZE: usize = 10;
+const ROOM_MIN_SIZE: usize = 6;
+const MAX_ROOMS: usize = 30;
 
 pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(dun_gen(TERM_WIDTH, TERM_HEIGHT))
+        app.insert_resource(dun_gen(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, TERM_WIDTH, TERM_HEIGHT))
             .add_startup_system(build_map)
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
@@ -12,8 +17,6 @@ impl Plugin for MapPlugin {
             );
     }
 }
-
-const NUM_TILES: usize = TERM_WIDTH * TERM_HEIGHT;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum TileType {
@@ -33,6 +36,7 @@ pub struct CurrentMap {
     pub blocked: Vec<Position>,
     pub width: usize,
     pub height: usize,
+    pub rooms: Vec<Room>
 }
 impl CurrentMap {
     pub fn new(map_width: usize, map_height: usize) -> Self {
@@ -48,6 +52,7 @@ impl CurrentMap {
             blocked: Vec::new(),
             width: map_width,
             height: map_height,
+            rooms: Vec::new()
         }
     }
 }
@@ -55,6 +60,7 @@ impl CurrentMap {
 //Startup system
 fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
     //populate the map.  
+    let (p_x, p_y) = map.rooms[0].center();
     map.creatures.push(
         commands
             .spawn_bundle(PlayerBundle {
@@ -62,14 +68,14 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
                 creature: Creature {},
                 glyph: Glyph { index: 64 },
                 pos: Position {
-                    x: TERM_WIDTH / 2,
-                    y: TERM_HEIGHT / 2,
+                    x: p_x,
+                    y: p_y,
                     z: 1,
                 },
             })
             .id(),
     );
-    let ind = pos_index(TERM_WIDTH / 2, TERM_HEIGHT / 2);
+    let ind = pos_index(p_x, p_y);
     map.tiles[ind].is_blocked = true;
 
     map.creatures.push(
