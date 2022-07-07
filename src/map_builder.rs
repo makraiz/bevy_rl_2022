@@ -1,12 +1,15 @@
+use crate::{
+    map::{CurrentMap, TileType},
+    term::pos_index,
+};
 use bracket_lib::prelude::*;
-use crate::{map::{CurrentMap, TileType}, term::pos_index};
 use rand::Rng;
 
 pub struct Room {
     pub x1: usize,
     pub x2: usize,
     pub y1: usize,
-    pub y2: usize
+    pub y2: usize,
 }
 impl Room {
     pub fn new(x: usize, y: usize, width: usize, height: usize) -> Self {
@@ -14,7 +17,7 @@ impl Room {
             x1: x,
             x2: x + width,
             y1: y,
-            y2: y + height
+            y2: y + height,
         }
     }
 
@@ -38,7 +41,7 @@ impl Room {
         return self.x1 <= other.x2
             && self.x2 >= other.x1
             && self.y1 <= other.y2
-            && self.y2 >= other.y1
+            && self.y2 >= other.y1;
     }
 }
 
@@ -57,18 +60,42 @@ fn tunnel(start: (usize, usize), end: (usize, usize)) -> Vec<(usize, usize)> {
         (corner_x, corner_y) = (x1, y2);
     }
 
-    for pt in Bresenham::new(Point{x: x1 as i32, y: y1 as i32}, Point{x: corner_x as i32, y: corner_y as i32}) {
+    for pt in Bresenham::new(
+        Point {
+            x: x1 as i32,
+            y: y1 as i32,
+        },
+        Point {
+            x: corner_x as i32,
+            y: corner_y as i32,
+        },
+    ) {
         tunnel.push((pt.x as usize, pt.y as usize))
     }
 
-    for pt in Bresenham::new(Point{x: corner_x as i32, y: corner_y as i32}, Point{x: x2 as i32, y: y2 as i32}) {
+    for pt in Bresenham::new(
+        Point {
+            x: corner_x as i32,
+            y: corner_y as i32,
+        },
+        Point {
+            x: x2 as i32,
+            y: y2 as i32,
+        },
+    ) {
         tunnel.push((pt.x as usize, pt.y as usize))
     }
 
     tunnel
 }
 
-pub fn dun_gen(max_rooms: usize, room_min_size: usize, room_max_size: usize, map_width: usize, map_height: usize) -> CurrentMap {
+pub fn dun_gen(
+    max_rooms: usize,
+    room_min_size: usize,
+    room_max_size: usize,
+    map_width: usize,
+    map_height: usize,
+) -> CurrentMap {
     let mut dungeon = CurrentMap::new(map_width, map_height);
     let mut rng = rand::thread_rng();
 
@@ -88,7 +115,7 @@ pub fn dun_gen(max_rooms: usize, room_min_size: usize, room_max_size: usize, map
             }
         }
         if intersects {
-            continue
+            continue;
         }
 
         for (x, y) in new_room.inner() {
@@ -99,9 +126,12 @@ pub fn dun_gen(max_rooms: usize, room_min_size: usize, room_max_size: usize, map
 
         if dungeon.rooms.is_empty() {
             dungeon.rooms.push(new_room);
-            continue
+            continue;
         } else {
-            for (x, y) in tunnel(dungeon.rooms[dungeon.rooms.len() - 1].center(), new_room.center()) {
+            for (x, y) in tunnel(
+                dungeon.rooms[dungeon.rooms.len() - 1].center(),
+                new_room.center(),
+            ) {
                 let index = pos_index(x, y);
                 dungeon.tiles[index].tile_type = TileType::Floor;
                 dungeon.tiles[index].is_blocked = false;

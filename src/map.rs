@@ -1,4 +1,6 @@
-use crate::{components::*, creatures::CreatureBundle, map_builder::*, player::PlayerBundle, term::*};
+use crate::{
+    components::*, creatures::CreatureBundle, map_builder::*, player::PlayerBundle, term::*,
+};
 use bevy::prelude::*;
 
 const NUM_TILES: usize = TERM_WIDTH * TERM_HEIGHT;
@@ -9,12 +11,18 @@ const MAX_ROOMS: usize = 30;
 pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(dun_gen(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, TERM_WIDTH, TERM_HEIGHT))
-            .add_startup_system(build_map)
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new().with_system(render_map),
-            );
+        app.insert_resource(dun_gen(
+            MAX_ROOMS,
+            ROOM_MIN_SIZE,
+            ROOM_MAX_SIZE,
+            TERM_WIDTH,
+            TERM_HEIGHT,
+        ))
+        .add_startup_system(populate_map)
+        .add_system_set_to_stage(
+            CoreStage::PostUpdate,
+            SystemSet::new().with_system(render_map),
+        );
     }
 }
 
@@ -33,10 +41,9 @@ pub struct Tile {
 pub struct CurrentMap {
     pub tiles: Vec<Tile>,
     pub creatures: Vec<Entity>,
-    pub blocked: Vec<Position>,
     pub width: usize,
     pub height: usize,
-    pub rooms: Vec<Room>
+    pub rooms: Vec<Room>,
 }
 impl CurrentMap {
     pub fn new(map_width: usize, map_height: usize) -> Self {
@@ -49,17 +56,15 @@ impl CurrentMap {
                 NUM_TILES
             ],
             creatures: Vec::new(),
-            blocked: Vec::new(),
             width: map_width,
             height: map_height,
-            rooms: Vec::new()
+            rooms: Vec::new(),
         }
     }
 }
 
-//Startup system
-fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
-    //populate the map.  
+//Startup system to spawn/populate the map.
+fn populate_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
     let (p_x, p_y) = map.rooms[0].center();
     map.creatures.push(
         commands
@@ -95,7 +100,7 @@ fn build_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
     map.tiles[ind].is_blocked = true;
 }
 
-//Render to terminal
+//Render to Terminal
 fn render_map(
     term: Res<Terminal>,
     map: Res<CurrentMap>,
