@@ -1,5 +1,6 @@
 use crate::{components::*, map::CurrentMap, term::pos_index};
 use bevy::prelude::*;
+use bracket_lib::prelude::*;
 
 #[derive(Bundle)]
 pub struct CreatureBundle {
@@ -26,14 +27,23 @@ fn wants_to_move(
 
         if dest_x >= 0 && dest_x < map.width as i32 && dest_y >= 0 && dest_y < map.height as i32 {
             let dest_ind = pos_index(dest_x as usize, dest_y as usize);
-            if !map.tiles[dest_ind].is_blocked {
+            if !map.tiles[dest_ind].blocks_movement {
                 let org_ind = pos_index(mover.x, mover.y);
-                map.tiles[org_ind].is_blocked = false;
-                map.tiles[dest_ind].is_blocked = true;
+                map.tiles[org_ind].blocks_movement = false;
+                map.tiles[dest_ind].blocks_movement = true;
                 mover.x = dest_x as usize;
                 mover.y = dest_y as usize;
             }
         }
         commands.entity(ent).remove::<WantsToMove>();
+    }
+}
+
+fn update_fov(mut map: ResMut<CurrentMap>, query: Query<&Position, (With<Player>, Changed<Position>)>) {
+    for pos in query.iter() {
+        let pt = bracket_lib::prelude::Point::new(pos.x, pos.y);
+        let range = 8;
+        let visible_coords = field_of_view_set(pt, range, &*map);
+        
     }
 }

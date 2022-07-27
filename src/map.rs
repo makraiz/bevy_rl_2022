@@ -1,143 +1,249 @@
-use crate::{
-    components::*, creatures::CreatureBundle, map_builder::*, player::PlayerBundle, term::*,
-};
+use crate::rect::Rect;
+use crate::*;
 use bevy::prelude::*;
+use bracket_lib::prelude::*;
+use std::cmp::{max, min};
 
-const NUM_TILES: usize = TERM_WIDTH * TERM_HEIGHT;
-const ROOM_MAX_SIZE: usize = 10;
-const ROOM_MIN_SIZE: usize = 6;
-const MAX_ROOMS: usize = 30;
+//Constants
+pub const MAP_WIDTH: usize = 80;
+pub const MAP_HEIGHT: usize = 50;
 
-pub struct MapPlugin;
-impl Plugin for MapPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(dun_gen(
-            MAX_ROOMS,
-            ROOM_MIN_SIZE,
-            ROOM_MAX_SIZE,
-            TERM_WIDTH,
-            TERM_HEIGHT,
-        ))
-        .add_startup_system(populate_map)
-        .add_system_set_to_stage(
-            CoreStage::PostUpdate,
-            SystemSet::new().with_system(render_map),
-        );
-    }
-}
+//Components
+#[derive(Component)]
+pub struct MapTile;
 
+// Resources
 #[derive(Clone, Copy, PartialEq)]
 pub enum TileType {
-    Wall,
     Floor,
+    Wall,
 }
 
-#[derive(Clone, Copy)]
-pub struct Tile {
-    pub tile_type: TileType,
-    pub is_blocked: bool,
+#[derive(Clone)]
+pub struct Map {
+    pub tiles: Vec<TileType>,
+    pub rooms: Vec<Rect>,
+    pub width: i32,
+    pub height: i32,
+    pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
 }
+impl Map {
+    ///Returns a tiles index for a tile at position x, y
+    pub fn xy_idx(&self, x: i32, y: i32) -> usize {
+        ((y * self.width) + x) as usize
+    }
 
-pub struct CurrentMap {
-    pub tiles: Vec<Tile>,
-    pub creatures: Vec<Entity>,
-    pub width: usize,
-    pub height: usize,
-    pub rooms: Vec<Room>,
-}
-impl CurrentMap {
-    pub fn new(map_width: usize, map_height: usize) -> Self {
-        Self {
-            tiles: vec![
-                Tile {
-                    tile_type: TileType::Wall,
-                    is_blocked: true
-                };
-                NUM_TILES
-            ],
-            creatures: Vec::new(),
-            width: map_width,
-            height: map_height,
-            rooms: Vec::new(),
+    ///Applies a Rect-shaped room
+    fn apply_room_to_map(&mut self, room: &Rect) {
+        for y in room.y1 + 1..=room.y2 {
+            for x in room.x1 + 1..=room.x2 {
+                let idx = self.xy_idx(x, y);
+                self.tiles[idx] = TileType::Floor;
+            }
         }
+    }
+
+    ///Applies a horizontal tunnel
+    fn apply_horizontal_tunnel(&mut self, x1: i32, x2: i32, y: i32) {
+        for x in min(x1, x2)..=max(x1, x2) {
+            let idx = self.xy_idx(x, y);
+            if idx > 0 && idx < self.width as usize * self.height as usize {
+                self.tiles[idx as usize] = TileType::Floor;
+            }
+        }
+    }
+
+    ///Applies a vertical tunnel
+    fn apply_vertical_tunnel(&mut self, y1: i32, y2: i32, x: i32) {
+        for y in min(y1, y2)..=max(y1, y2) {
+            let idx = self.xy_idx(x, y);
+            if idx > 0 && idx < self.width as usize * self.height as usize {
+                self.tiles[idx as usize] = TileType::Floor;
+            }
+        }
+    }
+
+    ///Creates a new Map.
+    pub fn new_map_rooms_and_corridors() -> Map {
+        let mut map = Map {
+            tiles: vec![TileType::Wall; MAP_WIDTH * MAP_HEIGHT],
+            rooms: Vec::new(),
+            width: MAP_WIDTH as i32,
+            height: MAP_HEIGHT as i32,
+            revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+            visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+        };
+
+        const MAX_ROOMS: i32 = 30;
+        const MIN_SIZE: i32 = 6;
+        const MAX_SIZE: i32 = 10;
+
+        let mut rng = RandomNumberGenerator::new();
+
+        for _ in 0..MAX_ROOMS {
+            let w = rng.range(MIN_SIZE, MAX_SIZE);
+            let h = rng.range(MIN_SIZE, MAX_SIZE);
+            let x = rng.roll_dice(1, 80 - w - 1) - 1;
+            let y = rng.roll_dice(1, 50 - h - 1) - 1;
+            let new_room = Rect::new(x, y, w, h);
+            let mut ok = true;
+            for other_room in map.rooms.iter() {
+                if new_room.intersect(other_room) {
+                    ok = false
+                }
+            }
+            if ok {
+                map.apply_room_to_map(&new_room);
+
+                if !map.rooms.is_empty() {
+                    let (new_x, new_y) = new_room.center();
+                    let (prev_x, prev_y) = map.rooms[map.rooms.len() - 1].center();
+                    if rng.range(0, 2) == 1 {
+                        map.apply_horizontal_tunnel(prev_x, new_x, prev_y);
+                        map.apply_vertical_tunnel(prev_y, new_y, new_x);
+                    } else {
+                        map.apply_vertical_tunnel(prev_y, new_y, prev_x);
+                        map.apply_horizontal_tunnel(prev_x, new_x, new_y);
+                    }
+                }
+
+                map.rooms.push(new_room);
+            }
+        }
+
+        map
+    }
+}
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> bracket_lib::prelude::Point {
+        bracket_lib::prelude::Point::new(self.width, self.height)
+    }
+}
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx] == TileType::Wall
     }
 }
 
-//Startup system to spawn/populate the map.
-fn populate_map(mut commands: Commands, mut map: ResMut<CurrentMap>) {
-    let (p_x, p_y) = map.rooms[0].center();
-    map.creatures.push(
-        commands
-            .spawn_bundle(PlayerBundle {
-                player: Player {},
-                creature: Creature {},
-                glyph: Glyph { index: 64 },
-                pos: Position {
-                    x: p_x,
-                    y: p_y,
-                    z: 1,
-                },
-            })
-            .id(),
-    );
-    let ind = pos_index(p_x, p_y);
-    map.tiles[ind].is_blocked = true;
-
-    map.creatures.push(
-        commands
-            .spawn_bundle(CreatureBundle {
-                creature: Creature {},
-                glyph: Glyph { index: 187 },
-                pos: Position {
-                    x: TERM_WIDTH / 2 + 4,
-                    y: TERM_HEIGHT / 2,
-                    z: 1,
-                },
-            })
-            .id(),
-    );
-    let ind = pos_index(TERM_WIDTH / 2 + 4, TERM_HEIGHT / 2);
-    map.tiles[ind].is_blocked = true;
-}
-
-//Render to Terminal
-fn render_map(
-    term: Res<Terminal>,
-    map: Res<CurrentMap>,
-    mut t_query: Query<&mut TextureAtlasSprite>,
-    e_query: Query<(&Position, &Glyph)>,
+//Renders the map.
+pub fn draw_map(
+    map: Res<Map>,
+    mut commands: Commands,
+    glyphs: Res<Glyphs>,
+    mut tiles: Query<(&Position, &mut TextureAtlasSprite), With<MapTile>>,
 ) {
     if map.is_changed() {
-        //Draw map tiles.
-        for y in 0..TERM_HEIGHT {
-            for x in 0..TERM_WIDTH {
-                let index = pos_index(x, y);
-                match map.tiles[index].tile_type {
-                    TileType::Floor => {
-                        let id = term.fg_tiles[index];
-                        if let Ok(mut sprite) = t_query.get_mut(id) {
-                            sprite.index = 0;
+        let mut x = 0;
+        let mut y = 0;
+
+        'outer: for (idx, tile) in map.tiles.iter().enumerate() {
+            if map.revealed_tiles[idx] {
+                //To ensure we don't create more entities for already existing tiles.
+                for (pos, mut render) in tiles.iter_mut() {
+                    if pos.x == x && pos.y == y {
+                        if !map.visible_tiles[idx] {
+                            render.color = Color::GRAY;
+                        } else if map.tiles[idx] == TileType::Wall {
+                            render.color = Color::GREEN;
                         }
+                        x += 1;
+                        if x > 79 {
+                            x = 0;
+                            y += 1;
+                        }
+                        continue 'outer;
+                    }
+                }
+
+                //Spawn a revealed tile.
+                match tile {
+                    TileType::Floor => {
+                        commands
+                            .spawn_bundle(SpriteSheetBundle {
+                                sprite: TextureAtlasSprite {
+                                    color: Color::GRAY,
+                                    index: 0,
+                                    ..default()
+                                },
+                                texture_atlas: glyphs.handle.clone(),
+                                ..default()
+                            })
+                            .insert(TileSize { size: 1. })
+                            .insert(Position { x, y, z: 0 })
+                            .insert(Renderable {
+                                glyph: 0,
+                                color: Color::GRAY,
+                            })
+                            .insert(MapTile {});
                     }
                     TileType::Wall => {
-                        let id = term.fg_tiles[index];
-                        if let Ok(mut sprite) = t_query.get_mut(id) {
-                            sprite.index = 11;
-                        }
+                        commands
+                            .spawn_bundle(SpriteSheetBundle {
+                                sprite: TextureAtlasSprite {
+                                    color: Color::GREEN,
+                                    index: 11,
+                                    ..default()
+                                },
+                                texture_atlas: glyphs.handle.clone(),
+                                ..default()
+                            })
+                            .insert(TileSize { size: 1. })
+                            .insert(Position { x, y, z: 1 })
+                            .insert(Renderable {
+                                glyph: 11,
+                                color: Color::GREEN,
+                            })
+                            .insert(MapTile {});
                     }
-                }
+                };
             }
-        }
 
-        //Draw creatures
-        for e in map.creatures.iter() {
-            if let Ok((pos, gly)) = e_query.get(*e) {
-                let pos_index = pos_index(pos.x, pos.y);
-                let id = term.fg_tiles[pos_index];
-                if let Ok(mut sprite) = t_query.get_mut(id) {
-                    sprite.index = gly.index;
-                }
+            //Increase the iterator
+            x += 1;
+            if x > 79 {
+                x = 0;
+                y += 1;
             }
         }
     }
+}
+
+//Creates a new Map.  Old, ugly version.  Randomly splatted walls.
+pub fn new_map_test() -> Map {
+    let mut map = Map {
+        tiles: vec![TileType::Floor; MAP_WIDTH * MAP_HEIGHT],
+        rooms: Vec::new(),
+        width: MAP_WIDTH as i32,
+        height: MAP_HEIGHT as i32,
+        revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+        visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+    };
+
+    //Make the boundaries walls
+    for x in 0..MAP_WIDTH {
+        let idx = map.xy_idx(x as i32, 0);
+        let idx2 = map.xy_idx(x as i32, (MAP_HEIGHT - 1) as i32);
+        map.tiles[idx] = TileType::Wall;
+        map.tiles[idx2] = TileType::Wall;
+    }
+    for y in 0..MAP_HEIGHT {
+        let idx = map.xy_idx(0, y as i32);
+        let idx2 = map.xy_idx((MAP_WIDTH - 1) as i32, y as i32);
+        map.tiles[idx] = TileType::Wall;
+        map.tiles[idx2] = TileType::Wall;
+    }
+
+    //Random wall placement
+    let mut rng = RandomNumberGenerator::new();
+    for _ in 0..400 {
+        let x = rng.roll_dice(1, (MAP_WIDTH - 1) as i32);
+        let y = rng.roll_dice(1, (MAP_HEIGHT - 1) as i32);
+        let index = map.xy_idx(x, y);
+        if index != map.xy_idx(40, 25) {
+            map.tiles[index] = TileType::Wall;
+        }
+    }
+
+    map
 }

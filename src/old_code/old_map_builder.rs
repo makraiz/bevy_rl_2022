@@ -121,7 +121,7 @@ pub fn dun_gen(
         for (x, y) in new_room.inner() {
             let index = pos_index(x, y);
             dungeon.tiles[index].tile_type = TileType::Floor;
-            dungeon.tiles[index].is_blocked = false;
+            dungeon.tiles[index].blocks_movement = false;
         }
 
         if dungeon.rooms.is_empty() {
@@ -134,7 +134,7 @@ pub fn dun_gen(
             ) {
                 let index = pos_index(x, y);
                 dungeon.tiles[index].tile_type = TileType::Floor;
-                dungeon.tiles[index].is_blocked = false;
+                dungeon.tiles[index].blocks_movement = false;
             }
         }
         dungeon.rooms.push(new_room);

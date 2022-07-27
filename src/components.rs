@@ -1,45 +1,43 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct BgTile;
+pub struct Monster;
 
 #[derive(Component)]
-pub struct Creature;
-
-#[derive(Component)]
-pub struct FgTile;
-
-#[derive(Component)]
-pub struct Glyph {
-    pub index: usize,
+pub struct Name {
+    pub name: String,
 }
 
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Component)]
 pub struct Position {
-    pub x: usize,
-    pub y: usize,
-    pub z: usize,
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+
+#[derive(Component)]
+pub struct Renderable {
+    pub glyph: usize,
+    pub color: Color,
 }
 
 #[derive(Component)]
 pub struct TileSize {
-    pub width: f32,
-    pub height: f32,
+    pub size: f32,
 }
-impl TileSize {
-    pub fn square(x: f32) -> Self {
-        Self {
-            width: x,
-            height: x,
-        }
-    }
+
+#[derive(Component)]
+pub struct Viewshed {
+    pub visible_tiles: Vec<bracket_lib::prelude::Point>,
+    pub range: i32,
+    pub dirty: bool,
 }
 
 #[derive(Component)]
 pub struct WantsToMove {
-    pub dx: i32,
-    pub dy: i32,
+    pub delta_x: i32,
+    pub delta_y: i32,
 }
