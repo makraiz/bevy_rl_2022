@@ -1,5 +1,6 @@
 mod components;
 mod map;
+mod map_indexing_system;
 mod monster_ai_system;
 mod player;
 mod rect;
@@ -48,9 +49,10 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(RunState::Paused)
                 .with_system(keyboard_input)
-                .with_system(try_move.after(keyboard_input)),
         )
+        .add_system(try_move)
         .add_system(visibility_system)
+        .add_system(map_indexing_system::map_indexing_system)
         .add_system_set(SystemSet::on_enter(RunState::Running).with_system(monster_ai_system))
         .add_system_set_to_stage(
             CoreStage::PostUpdate,
@@ -105,7 +107,9 @@ fn initial_setup(
             range: 8,
             dirty: true,
         })
-        .insert(Name {name: "Player".to_string()});
+        .insert(Name {name: "Player".to_string()})
+        .insert(BlocksTile {})
+        .insert(CombatStats {max_hp: 30, hp: 30, defense: 2, power: 5});
 
     //Spawning some monsters
     let mut rng = RandomNumberGenerator::new();
@@ -139,7 +143,9 @@ fn initial_setup(
                 dirty: true,
             })
             .insert(Monster {})
-            .insert(Name {name: format!("{} #{}", name, i)});
+            .insert(Name {name: format!("{} #{}", name, i)})
+            .insert(BlocksTile {})
+            .insert(CombatStats {max_hp: 16, hp: 16, defense: 1, power: 4});
             i += 1;
     }
 }
@@ -195,7 +201,6 @@ fn renderables(
         Without<MapTile>,
     >,
     map: Res<Map>,
-    //mut state: ResMut<State<RunState>>
 ) {
     for (render, mut sprite, pos, mut vis) in renderables.iter_mut() {
         let idx = map.xy_idx(pos.x, pos.y);
@@ -207,5 +212,4 @@ fn renderables(
             *vis = Visibility { is_visible: false };
         }
     }
-    //let _ = state.set(RunState::Paused);
 }

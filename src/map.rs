@@ -27,6 +27,8 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
+    pub tile_content: Vec<Vec<Entity>>
 }
 impl Map {
     ///Returns a tiles index for a tile at position x, y
@@ -54,7 +56,7 @@ impl Map {
         }
     }
 
-    ///Applies a vertical tunnel
+    //Applies a vertical tunnel
     fn apply_vertical_tunnel(&mut self, y1: i32, y2: i32, x: i32) {
         for y in min(y1, y2)..=max(y1, y2) {
             let idx = self.xy_idx(x, y);
@@ -62,6 +64,13 @@ impl Map {
                 self.tiles[idx as usize] = TileType::Floor;
             }
         }
+    }
+
+    //Helper function for BaseMap implementation.  
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x > self.width - 1 || y > self.height - 1 || y < 1 {return false}
+        let idx = self.xy_idx(x, y);
+        !self.blocked[idx]
     }
 
     ///Creates a new Map.
@@ -73,6 +82,8 @@ impl Map {
             height: MAP_HEIGHT as i32,
             revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
             visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+            blocked: vec![false; MAP_WIDTH * MAP_HEIGHT],
+            tile_content: vec![Vec::new(); MAP_WIDTH * MAP_HEIGHT],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -114,6 +125,18 @@ impl Map {
 
         map
     }
+
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
+    }
+
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
 }
 impl Algorithm2D for Map {
     fn dimensions(&self) -> bracket_lib::prelude::Point {
@@ -123,6 +146,34 @@ impl Algorithm2D for Map {
 impl BaseMap for Map {
     fn is_opaque(&self, idx: usize) -> bool {
         self.tiles[idx] == TileType::Wall
+    }
+
+    fn get_available_exits(&self, idx:usize) -> bracket_lib::prelude::SmallVec<[(usize, f32); 10]> {
+        let mut exits = bracket_lib::prelude::SmallVec::new();
+        let x = idx as i32 % self.width;
+        let y = idx as i32 / self.width;
+        let w = self.width as usize;
+    
+        // Cardinal directions
+        if self.is_exit_valid(x-1, y) { exits.push((idx-1, 1.0)) };
+        if self.is_exit_valid(x+1, y) { exits.push((idx+1, 1.0)) };
+        if self.is_exit_valid(x, y-1) { exits.push((idx-w, 1.0)) };
+        if self.is_exit_valid(x, y+1) { exits.push((idx+w, 1.0)) };
+
+        //Diagonals
+        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-w)+1, 1.45)); }
+        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+w)+1, 1.45)); }
+    
+        exits
+    }
+    
+    fn get_pathing_distance(&self, idx1:usize, idx2:usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(idx1 % w, idx1 / w);
+        let p2 = Point::new(idx2 % w, idx2 / w);
+        bracket_lib::prelude::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 
@@ -218,6 +269,8 @@ pub fn new_map_test() -> Map {
         height: MAP_HEIGHT as i32,
         revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
         visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
+        blocked: vec![false; MAP_WIDTH * MAP_HEIGHT],
+        tile_content: vec![Vec::new(); MAP_WIDTH * MAP_HEIGHT],
     };
 
     //Make the boundaries walls

@@ -1,6 +1,17 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
+pub struct BlocksTile;
+
+#[derive(Component)]
+pub struct CombatStats {
+    pub max_hp : i32,
+    pub hp : i32,
+    pub defense : i32,
+    pub power : i32
+}
+
+#[derive(Component)]
 pub struct Monster;
 
 #[derive(Component)]
@@ -25,6 +36,11 @@ pub struct Renderable {
 }
 
 #[derive(Component)]
+pub struct SufferDamage {
+    pub amount: Vec<i32>,
+}
+
+#[derive(Component)]
 pub struct TileSize {
     pub size: f32,
 }
@@ -36,8 +52,14 @@ pub struct Viewshed {
     pub dirty: bool,
 }
 
+//These WantsTo__ Components should probably be Events.
 #[derive(Component)]
 pub struct WantsToMove {
     pub delta_x: i32,
     pub delta_y: i32,
+}
+
+#[derive(Component)]
+pub struct WantsToMelee {
+    pub target: Entity,
 }
