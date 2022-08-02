@@ -1,5 +1,4 @@
-use crate::*;
-use bevy::prelude::*;
+use crate::{prelude::*, RunState};
 
 //Moves the player if they want to move and the new position is in bounds
 pub fn try_move(
@@ -10,18 +9,19 @@ pub fn try_move(
         Entity,
         &mut Viewshed,
         Option<&Player>,
+        &Name
     )>,
     targets: Query<(&CombatStats, Entity)>,
     map: Res<Map>,
     mut state: ResMut<State<RunState>>,
 ) {
-    for (mut pos, delta, entity, mut viewshed, player) in movers.iter_mut() {
+    for (mut pos, delta, entity, mut viewshed, player, name) in movers.iter_mut() {
         let dest_idx = map.xy_idx(pos.x + delta.delta_x, pos.y + delta.delta_y);
 
         //Bump attack
         for (_stats, target) in targets.iter() {
             if map.tile_content[dest_idx].contains(&target) {
-                println!("Player says, \"From Hell's heart I stab at thee!\"");
+                println!("{} says, \"From Hell's heart I stab at thee!\"", name.name);
                 if let Some(_) = player {
                     let _ = state.set(RunState::Running);
                 }

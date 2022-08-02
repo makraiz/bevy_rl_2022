@@ -61,7 +61,7 @@ fn main() {
         .add_system(visibility_system)
         .add_system(damage_system)
         .add_system(map_indexing_system::map_indexing_system)
-        .add_system_set(SystemSet::on_enter(RunState::Running).with_system(monster_ai_system))
+        .add_system_set(SystemSet::on_update(RunState::Running).with_system(monster_ai_system))
         .add_system_set_to_stage(
             CoreStage::PostUpdate,
             SystemSet::new()
