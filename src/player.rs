@@ -18,6 +18,7 @@ pub fn try_move(
     for (mut pos, delta, entity, mut viewshed, player) in movers.iter_mut() {
         let dest_idx = map.xy_idx(pos.x + delta.delta_x, pos.y + delta.delta_y);
 
+        //Bump attack
         for (_stats, target) in targets.iter() {
             if map.tile_content[dest_idx].contains(&target) {
                 println!("Player says, \"From Hell's heart I stab at thee!\"");

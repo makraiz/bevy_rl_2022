@@ -1,4 +1,5 @@
 mod components;
+mod damage_system;
 mod map;
 mod map_indexing_system;
 mod monster_ai_system;
@@ -6,16 +7,21 @@ mod player;
 mod rect;
 mod visibility_system;
 
-pub use components::{*, Name as Name};
-pub use map::*;
-pub use monster_ai_system::*;
-pub use player::*;
-pub use rect::*;
-pub use visibility_system::*;
+mod prelude {
+    pub use crate::components::{*, Name as Name};
+    pub use crate::damage_system::*;
+    pub use crate::map::*;
+    pub use crate::monster_ai_system::*;
+    pub use crate::player::*;
+    pub use crate::rect::*;
+    pub use crate::visibility_system::*;
 
-use bevy::prelude::*;
-use bracket_lib::prelude::*;
-use std::cmp::{max, min};
+    pub use bevy::prelude::*;
+    pub use bracket_lib::prelude::*;
+    pub use std::cmp::{max, min};
+}
+
+pub use prelude::*;
 
 //Consts
 const GLYPH_SIZE: f32 = 8.;
@@ -44,6 +50,7 @@ fn main() {
             ..default()
         })
         .insert_resource(Map::new_map_rooms_and_corridors())
+        .add_event::<SufferDamage>()
         .add_startup_system(initial_setup)
         .add_state(RunState::Paused)
         .add_system_set(
@@ -52,6 +59,7 @@ fn main() {
         )
         .add_system(try_move)
         .add_system(visibility_system)
+        .add_system(damage_system)
         .add_system(map_indexing_system::map_indexing_system)
         .add_system_set(SystemSet::on_enter(RunState::Running).with_system(monster_ai_system))
         .add_system_set_to_stage(
@@ -82,7 +90,8 @@ fn initial_setup(
     commands.insert_resource(glyphs.clone());
 
     //Adding camera
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
+    //commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
     //Spawning player
     let (x, y) = map.rooms[0].center();

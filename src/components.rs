@@ -36,11 +36,6 @@ pub struct Renderable {
 }
 
 #[derive(Component)]
-pub struct SufferDamage {
-    pub amount: Vec<i32>,
-}
-
-#[derive(Component)]
 pub struct TileSize {
     pub size: f32,
 }
