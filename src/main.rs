@@ -1,5 +1,5 @@
 mod components;
-mod damage_system;
+mod combat_system;
 mod map;
 mod map_indexing_system;
 mod monster_ai_system;
@@ -9,7 +9,7 @@ mod visibility_system;
 
 mod prelude {
     pub use crate::components::{*, Name as Name};
-    pub use crate::damage_system::*;
+    pub use crate::combat_system::*;
     pub use crate::map::*;
     pub use crate::monster_ai_system::*;
     pub use crate::player::*;
@@ -59,8 +59,9 @@ fn main() {
         )
         .add_system(try_move)
         .add_system(visibility_system)
-        .add_system(damage_system.after(try_move))
-        .add_system(bring_out_your_dead.after(damage_system))
+        .add_system(melee_combat_system.after(try_move))
+        .add_system(damage_system.after(melee_combat_system))
+        .add_system(bring_out_your_dead)
         .add_system(map_indexing_system::map_indexing_system)
         .add_system_set(SystemSet::on_update(RunState::Running).with_system(monster_ai_system))
         .add_system_set_to_stage(

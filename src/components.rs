@@ -47,7 +47,7 @@ pub struct Viewshed {
     pub dirty: bool,
 }
 
-//These WantsTo__ Components should probably be Events.
+//These Components should probably be Events.
 #[derive(Component)]
 pub struct WantsToMove {
     pub delta_x: i32,
@@ -57,4 +57,14 @@ pub struct WantsToMove {
 #[derive(Component)]
 pub struct WantsToMelee {
     pub target: Entity,
+}
+
+#[derive(Component)]
+pub struct SufferDamage {
+    pub amount: Vec<i32>,
+}
+impl SufferDamage {
+    pub fn new_damage(&mut self, amount: i32) {
+        self.amount.push(amount)
+    }
 }
