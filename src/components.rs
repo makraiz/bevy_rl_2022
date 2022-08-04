@@ -14,7 +14,7 @@ pub struct CombatStats {
 #[derive(Component)]
 pub struct Monster;
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Name {
     pub name: String,
 }

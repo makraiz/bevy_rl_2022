@@ -9,18 +9,21 @@ pub fn try_move(
         Entity,
         &mut Viewshed,
         Option<&Player>,
-        &Name
+        &Name,
+        &CombatStats,
     )>,
     targets: Query<(&CombatStats, Entity)>,
     map: Res<Map>,
     mut state: ResMut<State<RunState>>,
+    mut atk_event: EventWriter<SufferDamage>,
 ) {
-    for (mut pos, delta, entity, mut viewshed, player, name) in movers.iter_mut() {
+    for (mut pos, delta, entity, mut viewshed, player, name, mover_stats) in movers.iter_mut() {
         let dest_idx = map.xy_idx(pos.x + delta.delta_x, pos.y + delta.delta_y);
 
         //Bump attack
         for (_stats, target) in targets.iter() {
             if map.tile_content[dest_idx].contains(&target) {
+                //atk_event.send(SufferDamage{amount: vec![mover_stats.power], target: target.clone(), attacker_name: name.clone()});
                 println!("{} says, \"From Hell's heart I stab at thee!\"", name.name);
                 if let Some(_) = player {
                     let _ = state.set(RunState::Running);

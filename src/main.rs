@@ -60,6 +60,7 @@ fn main() {
         .add_system(try_move)
         .add_system(visibility_system)
         .add_system(damage_system)
+        .add_system(bring_out_your_dead.after(damage_system))
         .add_system(map_indexing_system::map_indexing_system)
         .add_system_set(SystemSet::on_update(RunState::Running).with_system(monster_ai_system))
         .add_system_set_to_stage(
@@ -91,7 +92,6 @@ fn initial_setup(
 
     //Adding camera
     commands.spawn_bundle(Camera2dBundle::default());
-    //commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
     //Spawning player
     let (x, y) = map.rooms[0].center();
