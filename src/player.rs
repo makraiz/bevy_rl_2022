@@ -23,6 +23,7 @@ pub fn try_move(
         //Bump attack
         for (_stats, target) in targets.iter() {
             if map.tile_content[dest_idx].contains(&target) {
+                //Sending this even prevents monsters from moving for some reason.  
                 //atk_event.send(SufferDamage{amount: vec![mover_stats.power], target: target.clone(), attacker_name: name.clone()});
                 println!("{} says, \"From Hell's heart I stab at thee!\"", name.name);
                 if let Some(_) = player {
