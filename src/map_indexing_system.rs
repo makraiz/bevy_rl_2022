@@ -1,7 +1,6 @@
-use bevy::prelude::*;
-use crate::{Map, Position, BlocksTile};
+use crate::prelude::*;
 
-pub fn map_indexing_system(mut map: ResMut<Map>, query: Query<(&Position, Option<&BlocksTile>, Entity)>) {
+pub fn indexing_system(mut map: ResMut<Map>, query: Query<(&Position, Option<&BlocksTile>, Entity)>) {
     map.populate_blocked();
     map.clear_content_index();
 

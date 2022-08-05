@@ -1,16 +1,12 @@
-use bevy::prelude::*;
-use bracket_lib::prelude::Point as Point;
-
-use crate::{
-    components::{Monster, Player, Position, Viewshed, Name as Name},
-    RunState, Map
-};
+use crate::prelude::*;
 
 pub fn monster_ai_system(
+    mut commands: Commands,
     map: Res<Map>,
     mut query: Query<(&mut Viewshed, &mut Position, &Name), (With<Monster>, Without<Player>)>,
     player: Query<(&Position, &Name), With<Player>>,
-    mut state: ResMut<State<RunState>>,
+    //mut state: ResMut<TurnState>
+    //mut state: ResMut<State<RunState>>,
 ) {
     for (view, mut pos, name) in query.iter_mut() {
         let (plyr, pname) = player.single();
@@ -29,5 +25,6 @@ pub fn monster_ai_system(
             }
         }
     }
-    let _ = state.set(RunState::Paused);
+    //let _ = state.set(RunState::Paused);
+    commands.insert_resource(TurnState::AwaitingInput);
 }

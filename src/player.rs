@@ -1,6 +1,7 @@
-use crate::{prelude::*, RunState};
+use crate::prelude::*;
 
 //Moves the player if they want to move and the new position is in bounds
+//TO_DO: uPDATE FOR iyes loopless
 pub fn try_move(
     mut commands: Commands,
     mut movers: Query<(
@@ -14,7 +15,7 @@ pub fn try_move(
     )>,
     targets: Query<(&CombatStats, Entity)>,
     map: Res<Map>,
-    mut state: ResMut<State<RunState>>,
+    //mut state: ResMut<State<RunState>>,
     //mut atk_event: EventWriter<SufferDamage>,  **BREAKS PATHFINDING**
 ) {
     for (mut pos, delta, entity, mut viewshed, player, name /*, mover_stats*/) in movers.iter_mut() {
@@ -26,11 +27,12 @@ pub fn try_move(
                 //Sending this event prevents monsters from moving for some reason.  
                 //atk_event.send(SufferDamage{amount: vec![mover_stats.power], target: target.clone(), attacker_name: name.clone()});
                 println!("{} says, \"From Hell's heart I stab at thee!\"", name.name);
-                if let Some(_) = player {
-                    let _ = state.set(RunState::Running);
-                }
-                //commands.entity(entity).insert(WantsToMelee{target});
+                //commands.entity(entity).insert(WantsToMelee{target}); I don't understand why doing anything in this area breaks pathfinding.
                 commands.entity(entity).remove::<WantsToMove>();
+                if let Some(_) = player {
+                    commands.insert_resource(TurnState::MonsterTurn);
+                    //let _ = state.set(RunState::Running);
+                }
                 return
             }
         }
@@ -41,10 +43,11 @@ pub fn try_move(
 
             viewshed.dirty = true;
         }
-        if let Some(_) = player {
-            let _ = state.set(RunState::Running);
-        }
         commands.entity(entity).remove::<WantsToMove>();
+        if let Some(_) = player {
+            commands.insert_resource(TurnState::MonsterTurn);
+            //let _ = state.set(RunState::Running);
+        }
     }
 }
 
@@ -54,6 +57,7 @@ pub fn keyboard_input(
     player: Query<Entity, With<Player>>,
     keys: Res<bevy::input::Input<KeyCode>>,
     //mut state: ResMut<State<RunState>>,
+    //mut state: ResMut<TurnState>,
 ) {
     let plyr = player.single();
     if keys.just_released(KeyCode::Left) || keys.just_released(KeyCode::Numpad4) {
@@ -99,4 +103,8 @@ pub fn keyboard_input(
     }
     let _ = state.set(RunState::Running);
     */
+    else {
+        return
+    }
+    commands.insert_resource(TurnState::PlayerTurn);
 }

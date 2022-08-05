@@ -653,6 +653,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bracket-lib",
+ "iyes_loopless",
 ]
 
 [[package]]
@@ -2188,6 +2189,17 @@ name = "itoa"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
+
+[[package]]
+name = "iyes_loopless"
+version = "0.7.0"
+source = "git+https://github.com/IyesGames/iyes_loopless?branch=main#3c5ebad4ae24fb3f30f03acb607e80d934fa7ad7"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_time",
+ "bevy_utils",
+]
 
 [[package]]
 name = "jni"
