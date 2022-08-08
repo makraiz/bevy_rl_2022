@@ -44,14 +44,6 @@ pub enum TurnState {
     MonsterTurn,
 }
 
-/* Is this what is breaking pathfinding?  According to Bevy Cheatbook states in Bevy are broken.  
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum RunState {
-    Paused,
-    Running,
-}
-*/
-
 //Resources
 #[derive(Clone)]
 pub struct Glyphs {
@@ -71,7 +63,6 @@ fn main() {
         .insert_resource(Map::new_map_rooms_and_corridors())
         .add_event::<SufferDamage>()
         .add_startup_system(initial_setup)
-        //Testing iyes_loopless
         .insert_resource(TurnState::AwaitingInput)
         .add_stage_after(CoreStage::Update, GameStage::MovePlayer, SystemStage::parallel())
         .add_stage_after(GameStage::MovePlayer, GameStage::MoveMonsters, SystemStage::parallel())
@@ -81,28 +72,6 @@ fn main() {
         .add_system_set_to_stage(GameStage::MovePlayer, ConditionSet::new().run_if_resource_equals(TurnState::PlayerTurn).with_system(try_move).into())
         .add_system_set_to_stage(GameStage::MoveMonsters, ConditionSet::new().run_if_resource_equals(TurnState::MonsterTurn).with_system(monster_ai_system).into())
         .add_system_set_to_stage(GameStage::MonsterCollisions, ConditionSet::new().with_system(visibility_system).with_system(melee_combat_system).with_system(indexing_system).with_system(damage_system).with_system(bring_out_your_dead).into())
-        /*  Bevy state/stage management
-        .add_state(RunState::Paused) //Bevy State 
-        .add_system_set(
-            SystemSet::on_update(RunState::Paused)
-                .with_system(keyboard_input)
-        ) 
-        .add_system(try_move)
-        .add_system(visibility_system)
-        .add_system(melee_combat_system.after(try_move))
-        .add_system(damage_system.after(melee_combat_system))
-        .add_system(bring_out_your_dead)
-        .add_system(map_indexing_system::map_indexing_system)
-        .add_system_set(SystemSet::on_update(RunState::Running).with_system(monster_ai_system)) 
-        .add_system_set_to_stage(
-            CoreStage::PostUpdate,
-            SystemSet::new()
-                .with_system(draw_map.before(size_scaling))
-                .with_system(size_scaling.before(position_translation))
-                .with_system(position_translation)
-                .with_system(renderables.after(position_translation)),
-        )
-        */
         .run();
 }
 
