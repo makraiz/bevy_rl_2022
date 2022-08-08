@@ -6,7 +6,8 @@ use std::cmp::{max, min};
 
 //Constants
 pub const MAP_WIDTH: usize = 80;
-pub const MAP_HEIGHT: usize = 50;
+pub const MAP_HEIGHT: usize = 43;
+pub const MAP_COUNT: usize = MAP_WIDTH * MAP_HEIGHT;
 
 //Components
 #[derive(Component)]
@@ -76,14 +77,14 @@ impl Map {
     ///Creates a new Map.
     pub fn new_map_rooms_and_corridors() -> Map {
         let mut map = Map {
-            tiles: vec![TileType::Wall; MAP_WIDTH * MAP_HEIGHT],
+            tiles: vec![TileType::Wall; MAP_COUNT],
             rooms: Vec::new(),
             width: MAP_WIDTH as i32,
             height: MAP_HEIGHT as i32,
-            revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
-            visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
-            blocked: vec![false; MAP_WIDTH * MAP_HEIGHT],
-            tile_content: vec![Vec::new(); MAP_WIDTH * MAP_HEIGHT],
+            revealed_tiles: vec![false; MAP_COUNT],
+            visible_tiles: vec![false; MAP_COUNT],
+            blocked: vec![false; MAP_COUNT],
+            tile_content: vec![Vec::new(); MAP_COUNT],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -95,12 +96,12 @@ impl Map {
         for _ in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);
             let h = rng.range(MIN_SIZE, MAX_SIZE);
-            let x = rng.roll_dice(1, 80 - w - 1) - 1;
-            let y = rng.roll_dice(1, 50 - h - 1) - 1;
+            let x = rng.roll_dice(1, MAP_WIDTH as i32 - w - 1) - 1;
+            let y = rng.roll_dice(1, MAP_HEIGHT as i32 - h - 1) - 1;
             let new_room = Rect::new(x, y, w, h);
             let mut ok = true;
             for other_room in map.rooms.iter() {
-                if new_room.intersect(other_room) {
+                if new_room.intersect(other_room) || !new_room.in_bounds() {
                     ok = false
                 }
             }
@@ -199,7 +200,7 @@ pub fn draw_map(
                             render.color = Color::GREEN;
                         }
                         x += 1;
-                        if x > 79 {
+                        if x > MAP_WIDTH as i32 - 1 {
                             x = 0;
                             y += 1;
                         }
@@ -252,7 +253,7 @@ pub fn draw_map(
 
             //Increase the iterator
             x += 1;
-            if x > 79 {
+            if x > MAP_WIDTH as i32 - 1 {
                 x = 0;
                 y += 1;
             }
@@ -263,14 +264,14 @@ pub fn draw_map(
 //Creates a new Map.  Old, ugly version.  Randomly splatted walls.
 pub fn new_map_test() -> Map {
     let mut map = Map {
-        tiles: vec![TileType::Floor; MAP_WIDTH * MAP_HEIGHT],
+        tiles: vec![TileType::Floor; MAP_COUNT],
         rooms: Vec::new(),
         width: MAP_WIDTH as i32,
         height: MAP_HEIGHT as i32,
-        revealed_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
-        visible_tiles: vec![false; MAP_WIDTH * MAP_HEIGHT],
-        blocked: vec![false; MAP_WIDTH * MAP_HEIGHT],
-        tile_content: vec![Vec::new(); MAP_WIDTH * MAP_HEIGHT],
+        revealed_tiles: vec![false; MAP_COUNT],
+        visible_tiles: vec![false; MAP_COUNT],
+        blocked: vec![false; MAP_COUNT],
+        tile_content: vec![Vec::new(); MAP_COUNT],
     };
 
     //Make the boundaries walls

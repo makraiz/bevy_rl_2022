@@ -1,5 +1,6 @@
 mod components;
 mod combat_system;
+mod gui;
 mod map;
 mod map_indexing_system;
 mod monster_ai_system;
@@ -10,6 +11,8 @@ mod visibility_system;
 mod prelude {
     pub use crate::components::{*, Name as Name};
     pub use crate::combat_system::*;
+    pub use crate::Glyphs;
+    pub use crate::gui::*;
     pub use crate::map::*;
     pub use crate::map_indexing_system::*;
     pub use crate::monster_ai_system::*;
@@ -28,6 +31,8 @@ use iyes_loopless::prelude::*;
 
 //Consts
 const GLYPH_SIZE: f32 = 8.;
+const TERM_WIDTH: f32 = 80.;
+const TERM_HEIGHT: f32 = 50.;
 
 //States
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, StageLabel)]
@@ -61,13 +66,15 @@ fn main() {
             ..default()
         })
         .insert_resource(Map::new_map_rooms_and_corridors())
-        .add_event::<SufferDamage>()
+        .add_event::<UiBox>()
+        .add_event::<ClearUi>()
         .add_startup_system(initial_setup)
+        .add_startup_system(draw_ui)
         .insert_resource(TurnState::AwaitingInput)
         .add_stage_after(CoreStage::Update, GameStage::MovePlayer, SystemStage::parallel())
         .add_stage_after(GameStage::MovePlayer, GameStage::MoveMonsters, SystemStage::parallel())
         .add_stage_after(GameStage::MoveMonsters, GameStage::MonsterCollisions, SystemStage::parallel())
-        .add_system_set(SystemSet::new().with_system(draw_map).with_system(renderables).with_system(size_scaling).with_system(position_translation.after(size_scaling)))
+        .add_system_set(SystemSet::new().with_system(draw_map).with_system(renderables).with_system(size_scaling).with_system(position_translation.after(size_scaling)).with_system(draw_ui_box))
         .add_system(keyboard_input.run_if_resource_equals(TurnState::AwaitingInput))
         .add_system_set_to_stage(GameStage::MovePlayer, ConditionSet::new().run_if_resource_equals(TurnState::PlayerTurn).with_system(try_move).into())
         .add_system_set_to_stage(GameStage::MoveMonsters, ConditionSet::new().run_if_resource_equals(TurnState::MonsterTurn).with_system(monster_ai_system).into())
@@ -168,8 +175,8 @@ fn size_scaling(
         let window = windows.get_primary().unwrap();
         for (sprite_size, mut transform) in q.iter_mut() {
             let scale = Vec3::new(
-                sprite_size.size / MAP_WIDTH as f32 * window.width() as f32 / GLYPH_SIZE,
-                sprite_size.size / MAP_HEIGHT as f32 * window.height() as f32 / GLYPH_SIZE,
+                sprite_size.size / TERM_WIDTH as f32 * window.width() as f32 / GLYPH_SIZE,
+                sprite_size.size / TERM_HEIGHT as f32 * window.height() as f32 / GLYPH_SIZE,
                 1.,
             );
             transform.scale = scale;
@@ -191,8 +198,8 @@ fn position_translation(
     let window = windows.get_primary().unwrap();
     for (pos, mut transform) in q.iter_mut() {
         transform.translation = Vec3::new(
-            convert_pos(pos.x as f32, window.width() as f32, MAP_WIDTH as f32),
-            convert_pos(pos.y as f32, window.height() as f32, MAP_HEIGHT as f32),
+            convert_pos(pos.x as f32, window.width() as f32, TERM_WIDTH as f32),
+            convert_pos(pos.y as f32, window.height() as f32, TERM_HEIGHT as f32) * -1.,
             pos.z as f32,
         );
     }
@@ -207,7 +214,7 @@ fn renderables(
             &Position,
             &mut Visibility,
         ),
-        Without<MapTile>,
+        (Without<MapTile>, Without<UiTile>),
     >,
     map: Res<Map>,
 ) {

@@ -61,28 +61,28 @@ pub fn keyboard_input(
     } else if keys.just_released(KeyCode::Up) || keys.just_released(KeyCode::Numpad8) {
         commands.entity(plyr).insert(WantsToMove {
             delta_x: 0,
-            delta_y: 1,
+            delta_y: -1,
         });
     } else if keys.just_released(KeyCode::Down) || keys.just_released(KeyCode::Numpad2) {
         commands.entity(plyr).insert(WantsToMove {
             delta_x: 0,
-            delta_y: -1,
+            delta_y: 1,
         });
     } else if keys.just_released(KeyCode::Numpad9) {
         commands.entity(plyr).insert(WantsToMove{
-            delta_x: 1, delta_y: 1,
+            delta_x: 1, delta_y: -1,
         });
     } else if keys.just_released(KeyCode::Numpad7) {
         commands.entity(plyr).insert(WantsToMove{
-            delta_x: -1, delta_y: 1,
+            delta_x: -1, delta_y: -1,
         });
     } else if keys.just_released(KeyCode::Numpad3) {
         commands.entity(plyr).insert(WantsToMove{
-            delta_x: 1, delta_y: -1,
+            delta_x: 1, delta_y: 1,
         });
     } else if keys.just_released(KeyCode::Numpad1) {
         commands.entity(plyr).insert(WantsToMove{
-            delta_x: -1, delta_y: -1,
+            delta_x: -1, delta_y: 1,
         });
     }
     else {

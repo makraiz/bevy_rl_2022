@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 #[derive(Clone)]
 pub struct Rect {
     pub x1: i32,
@@ -23,5 +25,9 @@ impl Rect {
 
     pub fn center(&self) -> (i32, i32) {
         ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
+    }
+
+    pub fn in_bounds(&self) -> bool {
+        self.x1 > 0 && self.x2 < MAP_WIDTH as i32 - 1  && self.y1 > 0 && self.y2 < MAP_HEIGHT as i32 - 1
     }
 }
