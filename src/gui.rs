@@ -58,8 +58,6 @@ pub fn draw_ui_box(mut ui_box: EventReader<UiBox>, mut commands: Commands, glyph
             }).insert(TileSize{size: 1.}).insert(Position {x: fx, y: bx.y + bx.h, z: 2}).insert(Renderable{glyph, color: bx.fg}).insert(UiTile {});
         }
 
-        //
-        println!("bx.y: {}, bx.h: {}", bx.y, bx.h);
         for fy in bx.y..=bx.h + bx.y {
             //Left
             if fy == bx.y || fy == bx.y + bx.h {
