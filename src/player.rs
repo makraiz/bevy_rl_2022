@@ -9,18 +9,16 @@ pub fn try_move(
         Entity,
         &mut Viewshed,
         Option<&Player>,
-        &Name,
     )>,
     targets: Query<(&CombatStats, Entity)>,
     map: Res<Map>,
 ) {
-    for (mut pos, delta, entity, mut viewshed, player, name) in movers.iter_mut() {
+    for (mut pos, delta, entity, mut viewshed, player) in movers.iter_mut() {
         let dest_idx = map.xy_idx(pos.x + delta.delta_x, pos.y + delta.delta_y);
 
         //Bump attack
         for (_stats, target) in targets.iter() {
             if map.tile_content[dest_idx].contains(&target) {
-                println!("{} says, \"From Hell's heart I stab at thee!\"", name.name);
                 commands.entity(entity).insert(WantsToMelee{target});
                 commands.entity(entity).remove::<WantsToMove>();
                 if let Some(_) = player {

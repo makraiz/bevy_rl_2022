@@ -75,7 +75,6 @@ fn main() {
         .run();
 }
 
-// initial_setup() system runs only once at startup
 fn initial_setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
